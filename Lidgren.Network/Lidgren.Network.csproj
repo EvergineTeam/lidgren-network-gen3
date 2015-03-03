@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Abstraction\PlatformSocket.cs" />
     <Compile Include="Encryption\NetAESEncryption.cs">
       <SubType>Code</SubType>
     </Compile>

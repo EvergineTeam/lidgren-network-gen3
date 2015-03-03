@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Net.Sockets;
 using System.Collections.Generic;
+using Lidgren.Network.Abstraction;
 
 namespace Lidgren.Network
 {
@@ -16,7 +17,7 @@ namespace Lidgren.Network
 	{
 		private NetPeerStatus m_status;
 		private Thread m_networkThread;
-		private Socket m_socket;
+        private PlatformSocket m_socket;
 		internal byte[] m_sendBuffer;
 		internal byte[] m_receiveBuffer;
 		internal NetIncomingMessage m_readHelperMessage;
@@ -44,7 +45,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Gets the socket, if Start() has been called
 		/// </summary>
-		public Socket Socket { get { return m_socket; } }
+        public PlatformSocket Socket { get { return m_socket; } }
 
 		/// <summary>
 		/// Call this to register a callback for when a new message arrives
@@ -124,29 +125,15 @@ namespace Lidgren.Network
 			m_lastSocketBind = now;
 
 			if (m_socket == null)
-				m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                m_socket = new PlatformSocket();
 
 			if (reBind)
-				m_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, (int)1); 
+                m_socket.IsReuseAddress = true;
 
 			m_socket.ReceiveBufferSize = m_configuration.ReceiveBufferSize;
 			m_socket.SendBufferSize = m_configuration.SendBufferSize;
-			m_socket.Blocking = false;
 
-			var ep = (EndPoint)new IPEndPoint(m_configuration.LocalAddress, reBind ? m_listenPort : m_configuration.Port);
-			m_socket.Bind(ep);
-
-			try
-			{
-				const uint IOC_IN = 0x80000000;
-				const uint IOC_VENDOR = 0x18000000;
-				uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
-				m_socket.IOControl((int)SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
-			}
-			catch
-			{
-				// ignore; SIO_UDP_CONNRESET not supported on this platform
-			}
+            m_socket.Bind(m_configuration.LocalAddress, reBind ? m_listenPort : m_configuration.Port);
 
 			IPEndPoint boundEp = m_socket.LocalEndPoint as IPEndPoint;
 			LogDebug("Socket bound to " + boundEp + ": " + m_socket.IsBound);
@@ -278,25 +265,13 @@ namespace Lidgren.Network
 				{
 					if (m_socket != null)
 					{
-						try
-						{
-							m_socket.Shutdown(SocketShutdown.Receive);
-						}
-						catch(Exception ex)
-						{
-							LogDebug("Socket.Shutdown exception: " + ex.ToString());
-						}
-
-						try
-						{
-							m_socket.Close(2); // 2 seconds timeout
-						}
-						catch (Exception ex)
-						{
-							LogDebug("Socket.Close exception: " + ex.ToString());
-						}
+                        m_socket.Shutdown();
 					}
 				}
+                catch (Exception ex)
+                {
+                    LogDebug("Socket.Shutdown exception: " + ex.ToString());
+                }
 				finally
 				{
 					m_socket = null;
@@ -417,7 +392,7 @@ namespace Lidgren.Network
 			if (m_socket == null)
 				return;
 
-			if (!m_socket.Poll(1000, SelectMode.SelectRead)) // wait up to 1 ms for data to arrive
+            if (!m_socket.Poll(1000)) // wait up to 1 ms for data to arrive
 				return;
 
 			//if (m_socket == null || m_socket.Available < 1)
@@ -432,8 +407,8 @@ namespace Lidgren.Network
 				int bytesReceived = 0;
 				try
 				{
-					bytesReceived = m_socket.ReceiveFrom(m_receiveBuffer, 0, m_receiveBuffer.Length, SocketFlags.None, ref m_senderRemote);
-				}
+                    bytesReceived = m_socket.ReceiveFrom(m_receiveBuffer, 0, m_receiveBuffer.Length, ref m_senderRemote);
+                }
 				catch (SocketException sx)
 				{
 					switch (sx.SocketErrorCode)

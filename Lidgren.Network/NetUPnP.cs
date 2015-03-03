@@ -72,9 +72,9 @@ namespace Lidgren.Network
 			byte[] arr = System.Text.Encoding.UTF8.GetBytes(str);
 
 			m_peer.LogDebug("Attempting UPnP discovery");
-			peer.Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
-			peer.RawSend(arr, 0, arr.Length, new IPEndPoint(IPAddress.Broadcast, 1900));
-			peer.Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, false);
+            peer.Socket.IsBroadcast = true;
+            peer.RawSend(arr, 0, arr.Length, new IPEndPoint(IPAddress.Broadcast, 1900));
+            peer.Socket.IsBroadcast = false;
 
 			// allow some extra time for router to respond
 			// System.Threading.Thread.Sleep(50);
