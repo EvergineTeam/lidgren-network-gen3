@@ -171,6 +171,7 @@ namespace Lidgren.Network
 			return btmp.ModPow(x.Multiply(u).Add(a), N).ToByteArrayUnsigned();
 		}
 
+#if !WINDOWS_PHONE
         /// <summary>
 		/// Create XTEA symmetrical encryption object from sessionValue
 		/// </summary>
@@ -188,5 +189,6 @@ namespace Lidgren.Network
 
 			return new NetXtea(peer, key);
 		}
+#endif
 	}
 }

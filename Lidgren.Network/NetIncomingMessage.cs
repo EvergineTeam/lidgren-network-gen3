@@ -85,6 +85,7 @@ namespace Lidgren.Network
 			m_isFragment = false;
 		}
 
+#if !WINDOWS_PHONE
 		/// <summary>
 		/// Decrypt a message
 		/// </summary>
@@ -94,6 +95,7 @@ namespace Lidgren.Network
 		{
 			return encryption.Decrypt(this);
 		}
+#endif
 
 		/// <summary>
 		/// Reads a value, in local time comparable to NetTime.Now, written using WriteTime()

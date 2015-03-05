@@ -1,4 +1,4 @@
-﻿#if !__ANDROID__ && !IOS && !UNITY_WEBPLAYER && !UNITY_ANDROID && !UNITY_IPHONE
+﻿#if !__ANDROID__ && !IOS && !UNITY_WEBPLAYER && !UNITY_ANDROID && !UNITY_IPHONE && !WINDOWS_PHONE
 #define IS_MAC_AVAILABLE
 #endif
 
@@ -27,7 +27,9 @@ namespace Lidgren.Network
 		private uint m_frameCounter;
 		private double m_lastHeartbeat;
 		private double m_lastSocketBind = float.MinValue;
+#if !WINDOWS_PHONE
 		private NetUPnP m_upnp;
+#endif
 		internal bool m_needFlushSendQueue;
 
 		internal readonly NetPeerConfiguration m_configuration;
@@ -150,8 +152,10 @@ namespace Lidgren.Network
 				if (m_status == NetPeerStatus.Running)
 					return;
 
+#if !WINDOWS_PHONE
 				if (m_configuration.m_enableUPnP)
 					m_upnp = new NetUPnP(this);
+#endif
 
 				InitializePools();
 
@@ -439,6 +443,7 @@ namespace Lidgren.Network
 
 				IPEndPoint ipsender = (IPEndPoint)m_senderRemote;
 
+#if !WINDOWS_PHONE
 				if (m_upnp != null && now < m_upnp.m_discoveryResponseDeadline && bytesReceived > 32)
 				{
 					// is this an UPnP response?
@@ -461,6 +466,7 @@ namespace Lidgren.Network
 						}
 					}
 				}
+#endif
 
 				NetConnection sender = null;
 				m_connectionLookup.TryGetValue(ipsender, out sender);

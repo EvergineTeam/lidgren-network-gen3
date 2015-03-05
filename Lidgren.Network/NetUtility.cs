@@ -16,7 +16,7 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRA
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#if !__ANDROID__ && !IOS && !UNITY_WEBPLAYER && !UNITY_ANDROID && !UNITY_IPHONE
+#if !__ANDROID__ && !IOS && !UNITY_WEBPLAYER && !UNITY_ANDROID && !UNITY_IPHONE && !WINDOWS_PHONE
 #define IS_FULL_NET_AVAILABLE
 #endif
 
@@ -32,6 +32,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+
+#if WINDOWS_PHONE
+using Windows.Networking;
+using Windows.Networking.Sockets;
+#endif
 
 namespace Lidgren.Network
 {
@@ -98,6 +103,31 @@ namespace Lidgren.Network
 				throw new ArgumentException("This method will not currently resolve other than ipv4 addresses");
 			}
 
+#if WINDOWS_PHONE
+            DatagramSocket.GetEndpointPairsAsync(new HostName(ipOrHost), "0").AsTask().ContinueWith(
+                (dataTask) =>
+                {
+                    try
+                    {
+                        var data = dataTask.Result;
+                        if (data != null && data.Count > 0)
+                        {
+                            foreach (EndpointPair item in data)
+                            {
+                                if (item != null && item.RemoteHostName != null &&
+                                              item.RemoteHostName.Type == HostNameType.Ipv4)
+                                {
+                                    callback(IPAddress.Parse(item.RemoteHostName.CanonicalName));
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                });
+#else
 			// ok must be a host name
 			IPHostEntry entry;
 			try
@@ -153,6 +183,7 @@ namespace Lidgren.Network
 					throw;
 				}
 			}
+#endif
 		}
 
 		/// <summary>
@@ -173,6 +204,30 @@ namespace Lidgren.Network
 				throw new ArgumentException("This method will not currently resolve other than ipv4 addresses");
 			}
 
+#if WINDOWS_PHONE
+            try
+            {
+                IReadOnlyList<EndpointPair> data = DatagramSocket.GetEndpointPairsAsync(new HostName(ipOrHost), "0").AsTask().Result;
+
+                if (data != null && data.Count > 0)
+                {
+                    foreach (EndpointPair item in data)
+                    {
+                        if (item != null && item.RemoteHostName != null &&
+                                      item.RemoteHostName.Type == HostNameType.Ipv4)
+                        {
+                            return IPAddress.Parse(item.RemoteHostName.CanonicalName);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                //LogWrite(string.Format(CultureInfo.InvariantCulture, "Failed to resolve host '{0}'.", ipOrHost));
+            }
+
+            return null;
+#else
 			// ok must be a host name
 			try
 			{
@@ -198,7 +253,8 @@ namespace Lidgren.Network
 					throw;
 				}
 			}
-		}
+#endif
+        }
 
 #if IS_FULL_NET_AVAILABLE
 
@@ -623,8 +679,13 @@ namespace Lidgren.Network
 		/// </summary>
 		public static byte[] CreateSHA1Hash(byte[] data, int offset, int count)
 		{
+#if WINDOWS_PHONE
+            var sha = new SHA1Managed();
+            return sha.ComputeHash(data, offset, count);
+#else
             using (var sha = SHA1.Create())
                 return sha.ComputeHash(data, offset, count);
+#endif
 		}
 
         /// <summary>
@@ -648,8 +709,13 @@ namespace Lidgren.Network
         /// </summary>
         public static byte[] CreateSHA256Hash(byte[] data, int offset, int count)
         {
+#if WINDOWS_PHONE
+            var sha = new SHA256Managed();
+            return sha.ComputeHash(data, offset, count);
+#else
             using (var sha = SHA256.Create())
                 return sha.ComputeHash(data, offset, count);
+#endif
         }
 	}
 }

@@ -113,6 +113,7 @@ namespace Lidgren.Network
 			return retval;
 		}
 
+#if !WINDOWS_PHONE
 		/// <summary>
 		/// Encrypt this message using the provided algorithm; no more writing can be done before sending it or the message will be corrupt!
 		/// </summary>
@@ -120,6 +121,7 @@ namespace Lidgren.Network
 		{
 			return encryption.Encrypt(this);
 		}
+#endif
 
 		/// <summary>
 		/// Returns a string that represents this object
