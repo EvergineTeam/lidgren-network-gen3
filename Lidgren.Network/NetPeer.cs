@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Lidgren.Network
 {
@@ -146,17 +147,14 @@ namespace Lidgren.Network
 			InitializeNetwork();
 			
 			// start network thread
-			m_networkThread = new Thread(new ThreadStart(NetworkLoop));
-			m_networkThread.Name = m_configuration.NetworkThreadName;
-			m_networkThread.IsBackground = true;
-			m_networkThread.Start();
+            m_networkThread = Task.Factory.StartNew(NetworkLoop, TaskCreationOptions.LongRunning);
 
 			// send upnp discovery
 			if (m_upnp != null)
 				m_upnp.Discover(this);
 
 			// allow some time for network thread to start up in case they call Connect() or UPnP calls immediately
-			Thread.Sleep(50);
+            Task.Delay(50).Wait();
 		}
 
 		/// <summary>

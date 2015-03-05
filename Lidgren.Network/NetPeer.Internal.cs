@@ -10,13 +10,14 @@ using System.Security.Cryptography;
 using System.Net.Sockets;
 using System.Collections.Generic;
 using Lidgren.Network.Abstraction;
+using System.Threading.Tasks;
 
 namespace Lidgren.Network
 {
 	public partial class NetPeer
 	{
 		private NetPeerStatus m_status;
-		private Thread m_networkThread;
+        private Task m_networkThread;
         private PlatformSocket m_socket;
 		internal byte[] m_sendBuffer;
 		internal byte[] m_receiveBuffer;
@@ -257,7 +258,7 @@ namespace Lidgren.Network
 			// one final heartbeat, will send stuff and do disconnect
 			Heartbeat();
 
-			Thread.Sleep(10);
+            Task.Delay(10).Wait();
 
 			lock (m_initializeLock)
 			{
@@ -725,9 +726,9 @@ namespace Lidgren.Network
 		[Conditional("DEBUG")]
 		internal void VerifyNetworkThread()
 		{
-			Thread ct = Thread.CurrentThread;
-			if (Thread.CurrentThread != m_networkThread)
-				throw new NetException("Executing on wrong thread! Should be library system thread (is " + ct.Name + " mId " + ct.ManagedThreadId + ")");
+            int? cTaskId = Task.CurrentId;
+            if (cTaskId != m_networkThread.Id)
+                throw new NetException("Executing on wrong thread! Should be library system thread");
 		}
 
 		internal NetIncomingMessage SetupReadHelperMessage(int ptr, int payloadLength)

@@ -4,6 +4,7 @@ using System.Xml;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Lidgren.Network
 {
@@ -77,7 +78,7 @@ namespace Lidgren.Network
             peer.Socket.IsBroadcast = false;
 
 			// allow some extra time for router to respond
-			// System.Threading.Thread.Sleep(50);
+            // Task.Delay(50).Wait();
 
 			m_discoveryResponseDeadline = (float)NetTime.Now + 6.0f; // arbitrarily chosen number, router gets 6 seconds to respond
 			m_status = UPnPStatus.Discovering;
@@ -182,7 +183,7 @@ namespace Lidgren.Network
 					"AddPortMapping");
 
 				m_peer.LogDebug("Sent UPnP port forward request");
-				System.Threading.Thread.Sleep(50);
+                Task.Delay(50).Wait();
 			}
 			catch (Exception ex)
 			{
