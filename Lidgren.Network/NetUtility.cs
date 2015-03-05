@@ -607,8 +607,7 @@ namespace Lidgren.Network
 		/// </summary>
 		public static byte[] CreateSHA1Hash(string key)
 		{
-			using (var sha = new SHA1CryptoServiceProvider())
-				return sha.ComputeHash(Encoding.UTF8.GetBytes(key));
+            return CreateSHA1Hash(Encoding.UTF8.GetBytes(key));
 		}
 
 		/// <summary>
@@ -616,8 +615,7 @@ namespace Lidgren.Network
 		/// </summary>
 		public static byte[] CreateSHA1Hash(byte[] data)
 		{
-			using (var sha = new SHA1CryptoServiceProvider())
-				return sha.ComputeHash(data);
+            return CreateSHA1Hash(data, 0, data.Length);
 		}
 
 		/// <summary>
@@ -625,8 +623,33 @@ namespace Lidgren.Network
 		/// </summary>
 		public static byte[] CreateSHA1Hash(byte[] data, int offset, int count)
 		{
-			using (var sha = new SHA1CryptoServiceProvider())
-				return sha.ComputeHash(data, offset, count);
+            using (var sha = SHA1.Create())
+                return sha.ComputeHash(data, offset, count);
 		}
+
+        /// <summary>
+        /// Create a SHA256 digest from a string
+        /// </summary>
+        public static byte[] CreateSHA256Hash(string key)
+        {
+            return CreateSHA256Hash(Encoding.UTF8.GetBytes(key));
+        }
+
+        /// <summary>
+        /// Create a SHA256 digest from a byte buffer
+        /// </summary>
+        public static byte[] CreateSHA256Hash(byte[] data)
+        {
+            return CreateSHA256Hash(data, 0, data.Length);
+        }
+
+        /// <summary>
+        /// Create a SHA256 digest from a byte buffer
+        /// </summary>
+        public static byte[] CreateSHA256Hash(byte[] data, int offset, int count)
+        {
+            using (var sha = SHA256.Create())
+                return sha.ComputeHash(data, offset, count);
+        }
 	}
 }

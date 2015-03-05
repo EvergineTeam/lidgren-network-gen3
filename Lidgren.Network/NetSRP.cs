@@ -1,7 +1,6 @@
 ﻿#define USE_SHA256
 
 using System;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace Lidgren.Network
@@ -15,16 +14,6 @@ namespace Lidgren.Network
 		private static readonly NetBigInteger g = NetBigInteger.Two;
 		private static readonly NetBigInteger k = ComputeMultiplier();
 
-		private static HashAlgorithm GetHashAlgorithm()
-		{
-#if USE_SHA256
-			// this does not seem to work as of yet
-			return SHA256.Create();
-#else
-			return SHA1.Create();
-#endif
-		}
-
 		/// <summary>
 		/// Compute multiplier (k)
 		/// </summary>
@@ -36,8 +25,7 @@ namespace Lidgren.Network
 			string ccstr = one + two.PadLeft(one.Length, '0');
 			byte[] cc = NetUtility.ToByteArray(ccstr);
 
-			var sha = GetHashAlgorithm();
-			var ccHashed = sha.ComputeHash(cc);
+			var ccHashed = Hash(cc);
 
 			return new NetBigInteger(NetUtility.ToHexString(ccHashed), 16);
 		}
@@ -67,17 +55,15 @@ namespace Lidgren.Network
 		/// </summary>
 		public static byte[] ComputePrivateKey(string username, string password, byte[] salt)
 		{
-			var sha = GetHashAlgorithm();
-
 			byte[] tmp = Encoding.UTF8.GetBytes(username + ":" + password);
-			byte[] innerHash = sha.ComputeHash(tmp);
+			byte[] innerHash = Hash(tmp);
 
 			byte[] total = new byte[innerHash.Length + salt.Length];
 			Buffer.BlockCopy(salt, 0, total, 0, salt.Length);
 			Buffer.BlockCopy(innerHash, 0, total, salt.Length, innerHash.Length);
 
 			// x   ie. H(salt || H(username || ":" || password))
-			return new NetBigInteger(NetUtility.ToHexString(sha.ComputeHash(total)), 16).ToByteArrayUnsigned();
+			return new NetBigInteger(NetUtility.ToHexString(Hash(total)), 16).ToByteArrayUnsigned();
 		}
 
 		/// <summary>
@@ -93,14 +79,18 @@ namespace Lidgren.Network
 			return serverVerifier.ToByteArrayUnsigned();
 		}
 
-		/// <summary>
-		/// SHA hash data
-		/// </summary>
-		public static byte[] Hash(byte[] data)
-		{
-			var sha = GetHashAlgorithm();
-			return sha.ComputeHash(data);
-		}
+        /// <summary>
+        /// SHA hash data
+        /// </summary>
+        public static byte[] Hash(byte[] data)
+        {
+#if USE_SHA256
+            // this does not seem to work as of yet
+            return NetUtility.CreateSHA256Hash(data);
+#else
+            return NetUtility.CreateSHA1Hash(data);
+#endif
+        }
 
 		/// <summary>
 		/// Compute client public ephemeral value (A)
@@ -144,8 +134,7 @@ namespace Lidgren.Network
 
 			byte[] cc = NetUtility.ToByteArray(ccstr);
 
-			var sha = GetHashAlgorithm();
-			var ccHashed = sha.ComputeHash(cc);
+			var ccHashed = Hash(cc);
 
 			return new NetBigInteger(NetUtility.ToHexString(ccHashed), 16).ToByteArrayUnsigned();
 		}
@@ -182,13 +171,12 @@ namespace Lidgren.Network
 			return btmp.ModPow(x.Multiply(u).Add(a), N).ToByteArrayUnsigned();
 		}
 
-		/// <summary>
+        /// <summary>
 		/// Create XTEA symmetrical encryption object from sessionValue
 		/// </summary>
 		public static NetXtea CreateEncryption(NetPeer peer, byte[] sessionValue)
 		{
-			var sha = GetHashAlgorithm();
-			var hash = sha.ComputeHash(sessionValue);
+			var hash = Hash(sessionValue);
 			
 			var key = new byte[16];
 			for(int i=0;i<16;i++)
