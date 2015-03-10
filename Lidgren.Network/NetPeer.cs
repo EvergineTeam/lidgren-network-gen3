@@ -227,7 +227,7 @@ namespace Lidgren.Network
 			return added;
 		}
 
-		// send message immediately
+		// send message immediately and recycle it
 		internal void SendLibrary(NetOutgoingMessage msg, IPEndPoint recipient)
 		{
 			VerifyNetworkThread();
@@ -236,6 +236,10 @@ namespace Lidgren.Network
 			bool connReset;
 			int len = msg.Encode(m_sendBuffer, 0, 0);
 			SendPacket(len, recipient, 1, out connReset);
+
+			// no reliability, no multiple recipients - we can just recycle this message immediately
+			msg.m_recyclingCount = 0;
+			Recycle(msg);
 		}
 
 		/// <summary>
@@ -290,7 +294,7 @@ namespace Lidgren.Network
 							break;
 						case NetConnectionStatus.RespondedConnect:
 							// send another response
-							hs.SendConnectResponse((float)NetTime.Now, false);
+							hs.SendConnectResponse(NetTime.Now, false);
 							break;
 						default:
 							// weird

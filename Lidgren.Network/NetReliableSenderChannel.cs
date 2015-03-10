@@ -66,11 +66,12 @@ namespace Lidgren.Network
 			//
 			for (int i = 0; i < m_storedMessages.Length; i++)
 			{
-				NetOutgoingMessage om = m_storedMessages[i].Message;
+				var storedMsg = m_storedMessages[i];
+				NetOutgoingMessage om = storedMsg.Message;
 				if (om == null)
 					continue;
 
-				double t = m_storedMessages[i].LastSent;
+				double t = storedMsg.LastSent;
 				if (t > 0 && (now - t) > m_resendDelay)
 				{
 					// deduce sequence number
@@ -89,7 +90,8 @@ namespace Lidgren.Network
 					//m_connection.m_peer.LogVerbose("Resending due to delay #" + m_storedMessages[i].SequenceNumber + " " + om.ToString());
 					m_connection.m_statistics.MessageResent(MessageResendReason.Delay);
 
-					m_connection.QueueSendMessage(om, m_storedMessages[i].SequenceNumber);
+					Interlocked.Increment(ref om.m_recyclingCount); // increment this since it's being decremented in QueueSendMessage
+					m_connection.QueueSendMessage(om, storedMsg.SequenceNumber);
 
 					m_storedMessages[i].LastSent = now;
 					m_storedMessages[i].NumSent++;
@@ -116,6 +118,10 @@ namespace Lidgren.Network
 			int seqNr = m_sendStart;
 			m_sendStart = (m_sendStart + 1) % NetConstants.NumSequenceNumbers;
 
+			// must increment recycle count here, since it's decremented in QueueSendMessage and we want to keep it for the future in case or resends
+			// we will decrement once more in DestoreMessage for final recycling
+			Interlocked.Increment(ref message.m_recyclingCount);
+
 			m_connection.QueueSendMessage(message, seqNr);
 
 			int storeIndex = seqNr % m_windowSize;
@@ -132,6 +138,9 @@ namespace Lidgren.Network
 		private void DestoreMessage(int storeIndex)
 		{
 			NetOutgoingMessage storedMessage = m_storedMessages[storeIndex].Message;
+
+			// on each destore; reduce recyclingcount so that when all instances are destored, the outgoing message can be recycled
+			Interlocked.Decrement(ref storedMessage.m_recyclingCount);
 #if DEBUG
 			if (storedMessage == null)
 				throw new NetException("m_storedMessages[" + storeIndex + "].Message is null; sent " + m_storedMessages[storeIndex].NumSent + " times, last time " + (NetTime.Now - m_storedMessages[storeIndex].LastSent) + " seconds ago");
@@ -247,6 +256,7 @@ namespace Lidgren.Network
 							m_storedMessages[slot].LastSent = now;
 							m_storedMessages[slot].NumSent++;
 							m_connection.m_statistics.MessageResent(MessageResendReason.HoleInSequence);
+							Interlocked.Increment(ref rmsg.m_recyclingCount); // increment this since it's being decremented in QueueSendMessage
 							m_connection.QueueSendMessage(rmsg, rnr);
 						}
 					}
