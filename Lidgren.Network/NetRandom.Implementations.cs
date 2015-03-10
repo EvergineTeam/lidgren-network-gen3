@@ -1,5 +1,12 @@
 ﻿using System;
+
+#if NETFX_CORE
+using Windows.Security.Cryptography;
+using Windows.Storage.Streams;
+using System.Runtime.InteropServices.WindowsRuntime;
+#else
 using System.Security.Cryptography;
+#endif
 
 namespace Lidgren.Network
 {
@@ -237,16 +244,29 @@ namespace Lidgren.Network
 		/// </summary>
 		public static new readonly CryptoRandom Instance = new CryptoRandom();
 
+ #if NETFX_CORE
+        private void GetBytes(byte[] buffer)
+        {
+            IBuffer randomBuffer = CryptographicBuffer.GenerateRandom((uint)buffer.Length);
+            randomBuffer.CopyTo(buffer);
+        }
+#else
 		private RandomNumberGenerator m_rnd = new RNGCryptoServiceProvider();
 
-		/// <summary>
+        private void GetBytes(byte[] buffer)
+        {
+            m_rnd.GetBytes(buffer);
+        }
+#endif
+
+        /// <summary>
 		/// Seed in CryptoRandom does not create deterministic sequences
 		/// </summary>
 		[CLSCompliant(false)]
 		public override void Initialize(uint seed)
 		{
 			byte[] tmp = new byte[seed % 16];
-			m_rnd.GetBytes(tmp); // just prime it
+            this.GetBytes(tmp); // just prime it
 		}
 
 		/// <summary>
@@ -256,7 +276,7 @@ namespace Lidgren.Network
 		public override uint NextUInt32()
 		{
 			var bytes = new byte[4];
-			m_rnd.GetBytes(bytes);
+            this.GetBytes(bytes);
 			return (uint)bytes[0] | (((uint)bytes[1]) << 8) | (((uint)bytes[2]) << 16) | (((uint)bytes[3]) << 24);
 		}
 
@@ -265,7 +285,7 @@ namespace Lidgren.Network
 		/// </summary>
 		public override void NextBytes(byte[] buffer)
 		{
-			m_rnd.GetBytes(buffer);
+            this.GetBytes(buffer);
 		}
 
 		/// <summary>
@@ -274,7 +294,7 @@ namespace Lidgren.Network
 		public override void NextBytes(byte[] buffer, int offset, int length)
 		{
 			var bytes = new byte[length];
-			m_rnd.GetBytes(bytes);
+			this.GetBytes(bytes);
 			Array.Copy(bytes, 0, buffer, offset, length);
 		}
 	}

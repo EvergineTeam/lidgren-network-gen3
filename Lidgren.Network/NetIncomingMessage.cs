@@ -85,8 +85,8 @@ namespace Lidgren.Network
 			m_isFragment = false;
 		}
 
-#if !WINDOWS_PHONE
-		/// <summary>
+#if !WINDOWS_PHONE && !NETFX_CORE
+        /// <summary>
 		/// Decrypt a message
 		/// </summary>
 		/// <param name="encryption">The encryption algorithm used to encrypt the message</param>

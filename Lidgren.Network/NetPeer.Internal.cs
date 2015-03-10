@@ -1,4 +1,4 @@
-﻿#if !__ANDROID__ && !IOS && !UNITY_WEBPLAYER && !UNITY_ANDROID && !UNITY_IPHONE && !WINDOWS_PHONE
+﻿#if !__ANDROID__ && !IOS && !UNITY_WEBPLAYER && !UNITY_ANDROID && !UNITY_IPHONE && !WINDOWS_PHONE && !NETFX_CORE
 #define IS_MAC_AVAILABLE
 #endif
 
@@ -6,7 +6,6 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Diagnostics;
-using System.Security.Cryptography;
 using System.Net.Sockets;
 using System.Collections.Generic;
 using Lidgren.Network.Abstraction;
@@ -27,8 +26,8 @@ namespace Lidgren.Network
 		private uint m_frameCounter;
 		private double m_lastHeartbeat;
 		private double m_lastSocketBind = float.MinValue;
-#if !WINDOWS_PHONE
-		private NetUPnP m_upnp;
+#if !WINDOWS_PHONE && !NETFX_CORE
+        private NetUPnP m_upnp;
 #endif
 		internal bool m_needFlushSendQueue;
 
@@ -152,8 +151,8 @@ namespace Lidgren.Network
 				if (m_status == NetPeerStatus.Running)
 					return;
 
-#if !WINDOWS_PHONE
-				if (m_configuration.m_enableUPnP)
+#if !WINDOWS_PHONE && !NETFX_CORE
+                if (m_configuration.m_enableUPnP)
 					m_upnp = new NetUPnP(this);
 #endif
 
@@ -443,8 +442,8 @@ namespace Lidgren.Network
 
 				IPEndPoint ipsender = (IPEndPoint)m_senderRemote;
 
-#if !WINDOWS_PHONE
-				if (m_upnp != null && now < m_upnp.m_discoveryResponseDeadline && bytesReceived > 32)
+#if !WINDOWS_PHONE && !NETFX_CORE
+                if (m_upnp != null && now < m_upnp.m_discoveryResponseDeadline && bytesReceived > 32)
 				{
 					// is this an UPnP response?
 					string resp = System.Text.Encoding.ASCII.GetString(m_receiveBuffer, 0, bytesReceived);

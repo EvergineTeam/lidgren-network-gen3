@@ -59,8 +59,8 @@ namespace Lidgren.Network
 		/// </summary>
 		public int Port { get { return m_listenPort; } }
 
-#if !WINDOWS_PHONE
-		/// <summary>
+#if !WINDOWS_PHONE && !NETFX_CORE
+        /// <summary>
 		/// Returns an UPnP object if enabled in the NetPeerConfiguration
 		/// </summary>
 		public NetUPnP UPnP { get { return m_upnp; } }
@@ -151,8 +151,8 @@ namespace Lidgren.Network
 			// start network thread
             m_networkThread = Task.Factory.StartNew(NetworkLoop, TaskCreationOptions.LongRunning);
 
-#if !WINDOWS_PHONE
-			// send upnp discovery
+#if !WINDOWS_PHONE && !NETFX_CORE
+            // send upnp discovery
 			if (m_upnp != null)
 				m_upnp.Discover(this);
 #endif

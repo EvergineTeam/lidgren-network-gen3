@@ -38,6 +38,9 @@ namespace Lidgren.Network.Abstraction
         {
             set
             {
+#if NETFX_CORE
+                m_socket.Control.DontFragment = value;
+#endif
             }
         }
 

@@ -16,7 +16,7 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRA
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#if !__ANDROID__ && !IOS && !UNITY_WEBPLAYER && !UNITY_ANDROID && !UNITY_IPHONE && !WINDOWS_PHONE
+#if !__ANDROID__ && !IOS && !UNITY_WEBPLAYER && !UNITY_ANDROID && !UNITY_IPHONE && !WINDOWS_PHONE && !NETFX_CORE
 #define IS_FULL_NET_AVAILABLE
 #endif
 
@@ -31,11 +31,19 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 
-#if WINDOWS_PHONE
+#if WINDOWS_PHONE || NETFX_CORE
 using Windows.Networking;
 using Windows.Networking.Sockets;
+#endif
+
+#if NETFX_CORE
+using Windows.Security.Cryptography.Core;
+using Windows.Storage.Streams;
+using Windows.Security.Cryptography;
+using System.Runtime.InteropServices.WindowsRuntime;
+#else
+using System.Security.Cryptography;
 #endif
 
 namespace Lidgren.Network
@@ -103,7 +111,7 @@ namespace Lidgren.Network
 				throw new ArgumentException("This method will not currently resolve other than ipv4 addresses");
 			}
 
-#if WINDOWS_PHONE
+#if WINDOWS_PHONE || NETFX_CORE
             DatagramSocket.GetEndpointPairsAsync(new HostName(ipOrHost), "0").AsTask().ContinueWith(
                 (dataTask) =>
                 {
@@ -202,9 +210,9 @@ namespace Lidgren.Network
 				if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
 					return ipAddress;
 				throw new ArgumentException("This method will not currently resolve other than ipv4 addresses");
-			}
+            }
 
-#if WINDOWS_PHONE
+#if WINDOWS_PHONE || NETFX_CORE
             try
             {
                 IReadOnlyList<EndpointPair> data = DatagramSocket.GetEndpointPairsAsync(new HostName(ipOrHost), "0").AsTask().Result;
@@ -228,7 +236,7 @@ namespace Lidgren.Network
 
             return null;
 #else
-			// ok must be a host name
+            // ok must be a host name
 			try
 			{
 				var addresses = Dns.GetHostAddresses(ipOrHost);
@@ -611,7 +619,7 @@ namespace Lidgren.Network
 					{
 						if (j >= h)
 						{
-							if (string.Compare(list[j - h].Name, tmp.Name, StringComparison.InvariantCulture) > 0)
+							if (string.Compare(list[j - h].Name, tmp.Name) > 0)
 							{
 								list[j] = list[j - h];
 								j -= h;
@@ -678,8 +686,17 @@ namespace Lidgren.Network
 		/// Create a SHA1 digest from a byte buffer
 		/// </summary>
 		public static byte[] CreateSHA1Hash(byte[] data, int offset, int count)
-		{
-#if WINDOWS_PHONE
+        {
+#if NETFX_CORE
+            IBuffer buffer = data.AsBuffer(offset, count);
+            HashAlgorithmProvider hashAlgorithm = HashAlgorithmProvider.OpenAlgorithm(HashAlgorithmNames.Sha1);
+            IBuffer hashBuffer = hashAlgorithm.HashData(buffer);
+
+            byte[] result = new byte[hashBuffer.Length];
+            hashBuffer.CopyTo(result);
+
+            return result;
+#elif WINDOWS_PHONE
             var sha = new SHA1Managed();
             return sha.ComputeHash(data, offset, count);
 #else
@@ -709,7 +726,16 @@ namespace Lidgren.Network
         /// </summary>
         public static byte[] CreateSHA256Hash(byte[] data, int offset, int count)
         {
-#if WINDOWS_PHONE
+#if NETFX_CORE
+            IBuffer buffer = data.AsBuffer(offset, count);
+            HashAlgorithmProvider hashAlgorithm = HashAlgorithmProvider.OpenAlgorithm(HashAlgorithmNames.Sha256);
+            IBuffer hashBuffer = hashAlgorithm.HashData(buffer);
+
+            byte[] result = new byte[hashBuffer.Length];
+            hashBuffer.CopyTo(result);
+
+            return result;
+#elif WINDOWS_PHONE
             var sha = new SHA256Managed();
             return sha.ComputeHash(data, offset, count);
 #else
