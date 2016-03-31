@@ -120,7 +120,7 @@ namespace Lidgren.Network
 			return retval;
 		}
 
-#if !WINDOWS_PHONE && !NETFX_CORE
+#if !WINDOWS_PHONE && !NETFX_CORE && !_NET_CORECLR
         /// <summary>
 		/// Encrypt this message using the provided algorithm; no more writing can be done before sending it or the message will be corrupt!
 		/// </summary>
@@ -130,10 +130,10 @@ namespace Lidgren.Network
 		}
 #endif
 
-		/// <summary>
-		/// Returns a string that represents this object
-		/// </summary>
-		public override string ToString()
+        /// <summary>
+        /// Returns a string that represents this object
+        /// </summary>
+        public override string ToString()
 		{
 			if (m_isSent)
 				return "[NetOutgoingMessage " + m_messageType + " " + this.LengthBytes + " bytes]";

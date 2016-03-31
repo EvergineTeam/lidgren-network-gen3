@@ -119,7 +119,11 @@ namespace Lidgren.Network.Abstraction
         public void Shutdown()
         {
             this.m_socket.Shutdown(SocketShutdown.Receive);
+#if  _NET_CORECLR
+            this.m_socket.Dispose();
+#else
             this.m_socket.Close(2); // 2 seconds timeout
+#endif
         }
 
         public int IOControl(int ioControlCode, byte[] optionInValue, byte[] optionOutValue)

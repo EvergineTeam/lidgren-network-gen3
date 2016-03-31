@@ -244,14 +244,18 @@ namespace Lidgren.Network
 		/// </summary>
 		public static new readonly CryptoRandom Instance = new CryptoRandom();
 
- #if NETFX_CORE
+#if NETFX_CORE
         private void GetBytes(byte[] buffer)
         {
             IBuffer randomBuffer = CryptographicBuffer.GenerateRandom((uint)buffer.Length);
             randomBuffer.CopyTo(buffer);
         }
 #else
-		private RandomNumberGenerator m_rnd = new RNGCryptoServiceProvider();
+#if _NET_CORECLR
+        private RandomNumberGenerator m_rnd = RandomNumberGenerator.Create();
+#else
+        private RandomNumberGenerator m_rnd = new RNGCryptoServiceProvider();
+#endif
 
         private void GetBytes(byte[] buffer)
         {
@@ -260,9 +264,9 @@ namespace Lidgren.Network
 #endif
 
         /// <summary>
-		/// Seed in CryptoRandom does not create deterministic sequences
-		/// </summary>
-		[CLSCompliant(false)]
+        /// Seed in CryptoRandom does not create deterministic sequences
+        /// </summary>
+        [CLSCompliant(false)]
 		public override void Initialize(uint seed)
 		{
 			byte[] tmp = new byte[seed % 16];

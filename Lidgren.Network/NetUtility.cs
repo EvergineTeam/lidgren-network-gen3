@@ -16,7 +16,7 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRA
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#if !__ANDROID__ && !IOS && !UNITY_WEBPLAYER && !UNITY_ANDROID && !UNITY_IPHONE && !WINDOWS_PHONE && !NETFX_CORE
+#if !__ANDROID__ && !IOS && !UNITY_WEBPLAYER && !UNITY_ANDROID && !UNITY_IPHONE && !WINDOWS_PHONE && !NETFX_CORE && !_NET_CORECLR
 #define IS_FULL_NET_AVAILABLE
 #endif
 
@@ -140,12 +140,20 @@ namespace Lidgren.Network
 			IPHostEntry entry;
 			try
 			{
-				Dns.BeginGetHostEntry(ipOrHost, delegate(IAsyncResult result)
-				{
-					try
+#if _NET_CORECLR
+                Dns.GetHostEntryAsync(ipOrHost).ContinueWith((result) =>
+#else
+                Dns.BeginGetHostEntry(ipOrHost, delegate(IAsyncResult result)
+#endif
+                {
+                    try
 					{
-						entry = Dns.EndGetHostEntry(result);
-					}
+#if _NET_CORECLR
+                        entry = result.Result;
+#else
+                        entry = Dns.EndGetHostEntry(result);
+#endif
+                    }
 					catch (SocketException ex)
 					{
 						if (ex.SocketErrorCode == SocketError.HostNotFound)
@@ -192,7 +200,7 @@ namespace Lidgren.Network
 				}
 			}
 #endif
-		}
+            }
 
 		/// <summary>
 		/// Get IPv4 address from notation (xxx.xxx.xxx.xxx) or hostname
@@ -239,7 +247,11 @@ namespace Lidgren.Network
             // ok must be a host name
 			try
 			{
-				var addresses = Dns.GetHostAddresses(ipOrHost);
+#if _NET_CORECLR
+                var addresses = Dns.GetHostAddressesAsync(ipOrHost).Result;
+#else
+                var addresses = Dns.GetHostAddressesAsync(ipOrHost);
+#endif
 				if (addresses == null)
 					return null;
 				foreach (var address in addresses)
@@ -262,7 +274,7 @@ namespace Lidgren.Network
 				}
 			}
 #endif
-        }
+            }
 
 #if IS_FULL_NET_AVAILABLE
 

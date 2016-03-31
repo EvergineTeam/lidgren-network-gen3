@@ -85,7 +85,7 @@ namespace Lidgren.Network
 			m_isFragment = false;
 		}
 
-#if !WINDOWS_PHONE && !NETFX_CORE
+#if !WINDOWS_PHONE && !NETFX_CORE && !_NET_CORECLR
         /// <summary>
 		/// Decrypt a message
 		/// </summary>
@@ -97,11 +97,11 @@ namespace Lidgren.Network
 		}
 #endif
 
-		/// <summary>
-		/// Reads a value, in local time comparable to NetTime.Now, written using WriteTime()
-		/// Must have a connected sender
-		/// </summary>
-		public double ReadTime(bool highPrecision)
+        /// <summary>
+        /// Reads a value, in local time comparable to NetTime.Now, written using WriteTime()
+        /// Must have a connected sender
+        /// </summary>
+        public double ReadTime(bool highPrecision)
 		{
 			return ReadTime(m_senderConnection, highPrecision);
 		}
