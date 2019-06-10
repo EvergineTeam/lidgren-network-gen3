@@ -99,17 +99,29 @@ namespace Lidgren.Network.Abstraction
 
         private void OnMessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
         {
-            var remoteEP = new IPEndPoint(IPAddress.Parse(args.RemoteAddress.ToString()), int.Parse(args.RemotePort));
-            var reader = args.GetDataReader();
-
-            int receivedByteCount = (int)reader.UnconsumedBufferLength;
-            if (receivedByteCount > 0)
+            try
             {
-                var resultBytes = new byte[receivedByteCount];
-                reader.ReadBytes(resultBytes);
-                m_datagrams.Enqueue(new Tuple<IPEndPoint, byte[]>(remoteEP, resultBytes));
-                Interlocked.Add(ref dataAvailable, receivedByteCount);
-                dataAvailableEvent.Set();
+                var remoteEP = new IPEndPoint(IPAddress.Parse(args.RemoteAddress.ToString()), int.Parse(args.RemotePort));
+                var reader = args.GetDataReader();
+
+                int receivedByteCount = (int)reader.UnconsumedBufferLength;
+                if (receivedByteCount > 0)
+                {
+                    var resultBytes = new byte[receivedByteCount];
+                    reader.ReadBytes(resultBytes);
+                    m_datagrams.Enqueue(new Tuple<IPEndPoint, byte[]>(remoteEP, resultBytes));
+                    Interlocked.Add(ref dataAvailable, receivedByteCount);
+                    dataAvailableEvent.Set();
+                }
+            }
+            catch (Exception ex)
+            {
+                SocketErrorStatus status = Windows.Networking.Sockets.SocketError.GetStatus(ex.HResult);
+
+                if (status != SocketErrorStatus.ConnectionResetByPeer)
+                {
+                    throw ex;
+                }
             }
         }
 
