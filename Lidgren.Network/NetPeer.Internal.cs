@@ -116,7 +116,7 @@ namespace Lidgren.Network
 			}
 			m_lastSocketBind = now;
 
-			using (var mutex = new Mutex(false, "Global\\lidgrenSocketBind"))
+			using (var mutex = new Mutex(false, "lidgrenSocketBind"))
 			{
 				try
 				{
