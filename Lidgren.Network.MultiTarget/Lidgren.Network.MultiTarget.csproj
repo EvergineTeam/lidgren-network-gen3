@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>WaveEngine.Lidgren</AssemblyName>
     <PackageVersion>1.0.0</PackageVersion>
-    <Description>Lidgren.Network is a networking library for .net framework which uses a single udp socket to deliver a simple API for connecting a client to a server, reading and sending messages. This package is used by WaveEngine to implement the WaveEngine.Netwroking extension.</Description>
+    <Description>Lidgren.Network is a networking library for .net framework which uses a single udp socket to deliver a simple API for connecting a client to a server, reading and sending messages. This package is used by WaveEngine to implement the WaveEngine.Networking extension.</Description>
     <Authors>Lidgren;Wave Engine Team</Authors>
     <Product>Wave Engine</Product>
     <PackageProjectUrl>https://waveengine.net/</PackageProjectUrl>
