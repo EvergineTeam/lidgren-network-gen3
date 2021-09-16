@@ -78,7 +78,7 @@ namespace Lidgren.Network
 
 			m_peer.LogDebug("Attempting UPnP discovery");
 			peer.Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
-			peer.RawSend(arr, 0, arr.Length, new NetEndPoint(NetUtility.GetBroadcastAddress(), 1900));
+			peer.RawSend(arr, 0, arr.Length, new NetEndPoint(peer.Configuration.BroadcastAddress, 1900));
 			peer.Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, false);
 		}
 

@@ -141,14 +141,14 @@ namespace Lidgren.Network
 			IPAddress ba = default(IPAddress);
 			try
 			{
-				ba = NetUtility.GetCachedBroadcastAddress();
+				ba = m_configuration.BroadcastAddress;
 
                 // TODO: refactor this check outta here
                 if (target.Address.Equals(ba))
                 {
                     // Some networks do not allow 
                     // a global broadcast so we use the BroadcastAddress from the configuration
-                    // this can be resolved to a local broadcast addresss e.g 192.168.x.255                    
+                    // this can be resolved to a local broadcast address e.g 192.168.x.255                    
                     targetCopy.Address = m_configuration.BroadcastAddress;
                     targetCopy.Port = target.Port;
                     m_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, true);
