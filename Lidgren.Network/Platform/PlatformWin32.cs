@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -13,6 +14,8 @@ namespace Lidgren.Network
 	{
 		private static readonly long s_timeInitialized = Stopwatch.GetTimestamp();
 		private static readonly double s_dInvFreq = 1.0 / (double)Stopwatch.Frequency;
+
+		public static NetworkInterface DefaultNetworkInterface { get; set; } = GetNetworkInterfaces().FirstOrDefault();
 		
 		[CLSCompliant(false)]
 		public static ulong GetPlatformSeed(int seedInc)
@@ -23,25 +26,23 @@ namespace Lidgren.Network
 
 		public static double Now { get { return (double)(Stopwatch.GetTimestamp() - s_timeInitialized) * s_dInvFreq; } }
 
-		private static NetworkInterface GetNetworkInterface()
+
+		public static IEnumerable<NetworkInterface> GetNetworkInterfaces()
 		{
 			var computerProperties = IPGlobalProperties.GetIPGlobalProperties();
 			if (computerProperties == null)
-				return null;
+				yield break;
 
 			var nics = NetworkInterface.GetAllNetworkInterfaces();
 			if (nics == null || nics.Length < 1)
-				return null;
+				yield break;
 
-			NetworkInterface best = null;
 			foreach (NetworkInterface adapter in nics)
 			{
 				if (adapter.NetworkInterfaceType == NetworkInterfaceType.Loopback || adapter.NetworkInterfaceType == NetworkInterfaceType.Unknown)
 					continue;
 				if (!adapter.Supports(NetworkInterfaceComponent.IPv4))
 					continue;
-				if (best == null)
-					best = adapter;
 				if (adapter.OperationalStatus != OperationalStatus.Up)
 					continue;
 
@@ -52,11 +53,10 @@ namespace Lidgren.Network
 					if (unicastAddress != null && unicastAddress.Address != null && unicastAddress.Address.AddressFamily == AddressFamily.InterNetwork)
 					{
 						// Yes it does, return this network interface.
-						return adapter;
+						yield return adapter;
 					}
 				}
 			}
-			return best;
 		}
 
 		/// <summary>
@@ -64,7 +64,7 @@ namespace Lidgren.Network
 		/// </summary>
 		public static byte[] GetMacAddressBytes()
 		{
-			var ni = GetNetworkInterface();
+			var ni = DefaultNetworkInterface;
 			if (ni == null)
 				return null;
 			return ni.GetPhysicalAddress().GetAddressBytes();
@@ -72,30 +72,27 @@ namespace Lidgren.Network
 
 		public static IPAddress GetBroadcastAddress()
 		{
-			var ni = GetNetworkInterface();
+			var ni = DefaultNetworkInterface;
 			if (ni == null)
 				return null;
 
-			var properties = ni.GetIPProperties();
-			foreach (UnicastIPAddressInformation unicastAddress in properties.UnicastAddresses)
+			var address = ni.GetUnicastAddress(out var mask);
+			if (address != null)
 			{
-				if (unicastAddress != null && unicastAddress.Address != null && unicastAddress.Address.AddressFamily == AddressFamily.InterNetwork)
+				byte[] ipAdressBytes = address.GetAddressBytes();
+				byte[] subnetMaskBytes = mask.GetAddressBytes();
+
+				if (ipAdressBytes.Length != subnetMaskBytes.Length)
+					throw new ArgumentException("Lengths of IP address and subnet mask do not match.");
+
+				byte[] broadcastAddress = new byte[ipAdressBytes.Length];
+				for (int i = 0; i < broadcastAddress.Length; i++)
 				{
-					var mask = unicastAddress.IPv4Mask;
-					byte[] ipAdressBytes = unicastAddress.Address.GetAddressBytes();
-					byte[] subnetMaskBytes = mask.GetAddressBytes();
-
-					if (ipAdressBytes.Length != subnetMaskBytes.Length)
-						throw new ArgumentException("Lengths of IP address and subnet mask do not match.");
-
-					byte[] broadcastAddress = new byte[ipAdressBytes.Length];
-					for (int i = 0; i < broadcastAddress.Length; i++)
-					{
-						broadcastAddress[i] = (byte)(ipAdressBytes[i] | (subnetMaskBytes[i] ^ 255));
-					}
-					return new IPAddress(broadcastAddress);
+					broadcastAddress[i] = (byte)(ipAdressBytes[i] | (subnetMaskBytes[i] ^ 255));
 				}
+				return new IPAddress(broadcastAddress);
 			}
+
 			return IPAddress.Broadcast;
 		}
 
@@ -104,14 +101,15 @@ namespace Lidgren.Network
 		/// </summary>
 		public static IPAddress GetMyAddress(out IPAddress mask)
 		{
-			var ni = GetNetworkInterface();
-			if (ni == null)
-			{
-				mask = null;
-				return null;
-			}
+			return DefaultNetworkInterface.GetUnicastAddress(out mask);
+		}
 
-			IPInterfaceProperties properties = ni.GetIPProperties();
+		/// <summary>
+		/// Gets the local IPv4 address (not necessarily external) and subnet mask of the specified network interface.
+		/// </summary>
+		public static IPAddress GetUnicastAddress(this NetworkInterface networkInterface, out IPAddress mask)
+		{
+			IPInterfaceProperties properties = networkInterface.GetIPProperties();
 			foreach (UnicastIPAddressInformation unicastAddress in properties.UnicastAddresses)
 			{
 				if (unicastAddress != null && unicastAddress.Address != null && unicastAddress.Address.AddressFamily == AddressFamily.InterNetwork)
