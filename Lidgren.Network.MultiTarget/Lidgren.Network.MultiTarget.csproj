@@ -1,16 +1,15 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras/3.0.22">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>WaveEngine.Lidgren</AssemblyName>
     <TargetFrameworks>netstandard2.0;monoandroid81;net6.0-android</TargetFrameworks>
+    <AssemblyName>Evergine.Lidgren</AssemblyName>
     <PackageVersion>1.0.0</PackageVersion>
-    <Description>Lidgren.Network is a networking library for .net framework which uses a single udp socket to deliver a simple API for connecting a client to a server, reading and sending messages. This package is used by WaveEngine to implement the WaveEngine.Networking extension.</Description>
-    <Authors>Lidgren;Wave Engine Team</Authors>
-    <Product>Wave Engine</Product>
-    <PackageProjectUrl>https://waveengine.net/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/WaveEngine/lidgren-network-gen3</RepositoryUrl>
-    <PackageIconUrl>http://wave.blob.core.windows.net/$root/NugetWave.png</PackageIconUrl>
+    <Description>Lidgren.Network is a networking library for .net framework which uses a single udp socket to deliver a simple API for connecting a client to a server, reading and sending messages. This package is used by Evergine to implement the Evergine.Networking extension.</Description>
+    <Authors>Lidgren;Evergine Team</Authors>
+    <Product>Evergine</Product>
+    <PackageProjectUrl>https://evergine.com/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/EvergineTeam/lidgren-network-gen3</RepositoryUrl>
+    <PackageIconUrl>https://everginestudio.blob.core.windows.net/launcher/icon.png</PackageIconUrl>	
   </PropertyGroup>
 
   <ItemGroup>
