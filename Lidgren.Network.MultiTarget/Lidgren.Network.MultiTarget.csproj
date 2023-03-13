@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras/3.0.22">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>WaveEngine.Lidgren</AssemblyName>
+    <TargetFrameworks>netstandard2.0;monoandroid81;net6.0-android</TargetFrameworks>
     <PackageVersion>1.0.0</PackageVersion>
     <Description>Lidgren.Network is a networking library for .net framework which uses a single udp socket to deliver a simple API for connecting a client to a server, reading and sending messages. This package is used by WaveEngine to implement the WaveEngine.Networking extension.</Description>
     <Authors>Lidgren;Wave Engine Team</Authors>
@@ -82,6 +83,8 @@
     <Compile Include="..\Lidgren.Network\NetUnreliableUnorderedReceiver.cs" Link="NetUnreliableUnorderedReceiver.cs" />
     <Compile Include="..\Lidgren.Network\NetUPnP.cs" Link="NetUPnP.cs" />
     <Compile Include="..\Lidgren.Network\NetUtility.cs" Link="NetUtility.cs" />
+    <Compile Include="..\Lidgren.Network\Platform\PlatformAndroid.cs" Link="Platform\PlatformAndroid.cs" />
+    <Compile Include="..\Lidgren.Network\Platform\PlatformShared.cs" Link="Platform\PlatformShared.cs" />
     <Compile Include="..\Lidgren.Network\Platform\PlatformWin32.cs" Link="Platform\PlatformWin32.cs" />
   </ItemGroup>
 

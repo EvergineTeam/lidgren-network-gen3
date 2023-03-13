@@ -116,7 +116,15 @@ namespace Lidgren.Network
 			}
 			m_lastSocketBind = now;
 
-			using (var mutex = new Mutex(false, "lidgrenSocketBind"))
+#if __ANDROID__
+            /*
+             * Mono.Android does not support named Mutex
+             * https://github.com/mono/mono/blob/ef0450d2e42a961b857a144eb986fcc5eabe595d/mcs/class/corlib/System.Threading/Mutex.cs#L180
+			 */
+            using (var mutex = new Mutex(false))
+#else
+            using (var mutex = new Mutex(false, "lidgrenSocketBind"))
+#endif
 			{
 				try
 				{
